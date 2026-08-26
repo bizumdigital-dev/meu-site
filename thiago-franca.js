@@ -229,123 +229,132 @@
 (function () {
   'use strict';
 
-  var section = document.querySelector('#home.hero--fold');
-  if (!section) return;
+  /**
+   * Reveal por máscara (Webflow-style) — reutilizável.
+   * @param {Object} [options]
+   * @param {ParentNode} [options.root]
+   * @param {string} [options.textSelector]
+   * @param {string} [options.afterSelector]
+   * @param {number} [options.delay] delay inicial em segundos
+   * @param {number} [options.duration]
+   * @param {number} [options.stagger]
+   * @param {number} [options.afterDelay] atraso após o texto principal
+   */
+  function animateHeroReveal(options) {
+    var opts = options || {};
+    var root = opts.root || document;
+    var textSelector = opts.textSelector || '[data-hero-reveal]';
+    var afterSelector = opts.afterSelector || '[data-hero-reveal-after]';
+    var delay = opts.delay != null ? opts.delay : 0.28;
+    var duration = opts.duration != null ? opts.duration : 1.05;
+    var stagger = opts.stagger != null ? opts.stagger : 0.04;
+    var afterDelay = opts.afterDelay != null ? opts.afterDelay : 0.2;
+    var ease = opts.ease || 'expo.out';
 
-  var live = section.querySelector('.hero-shatter-live') || section;
-  var targets = Array.prototype.slice.call(live.querySelectorAll('.hero-type[data-type-text]'));
-  var cursorEl = live.querySelector('.hero-type-cursor');
-  if (!targets.length) return;
+    var textEls = Array.prototype.slice.call(root.querySelectorAll(textSelector));
+    var afterEls = Array.prototype.slice.call(root.querySelectorAll(afterSelector));
 
-  var runId = 0;
-  var timers = [];
+    if (!textEls.length && !afterEls.length) return null;
 
-  function prefersReducedMotion() {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }
-
-  function clearTimers() {
-    timers.forEach(function (id) {
-      window.clearTimeout(id);
-    });
-    timers = [];
-  }
-
-  function later(fn, ms) {
-    var id = window.setTimeout(fn, ms);
-    timers.push(id);
-    return id;
-  }
-
-  function delayForIndex(i, len) {
-    if (len <= 1) return 90;
-    var t = i / (len - 1);
-    return 52 + 48 * Math.sin(Math.PI * t);
-  }
-
-  function resetAll() {
-    clearTimers();
-    targets.forEach(function (el) {
-      el.textContent = '';
-    });
-    if (cursorEl) {
-      cursorEl.classList.remove('is-done');
-    }
-  }
-
-  function typeOne(el, text, onDone, activeRun) {
-    var i = 0;
-    var len = text.length;
-
-    function tick() {
-      if (activeRun !== runId) return;
-      if (i >= len) {
-        onDone();
-        return;
-      }
-      el.textContent += text.charAt(i);
-      i += 1;
-      if (i < len) {
-        later(tick, delayForIndex(i, len));
-      } else {
-        onDone();
-      }
-    }
-
-    tick();
-  }
-
-  function runSequence() {
-    runId += 1;
-    var activeRun = runId;
-    resetAll();
-
-    if (prefersReducedMotion()) {
-      targets.forEach(function (el) {
-        el.textContent = el.getAttribute('data-type-text') || '';
+    function showAll() {
+      textEls.forEach(function (el) {
+        el.classList.add('is-hero-ready');
+        el.style.transform = '';
       });
-      if (cursorEl) cursorEl.classList.add('is-done');
-      return;
-    }
-
-    if (cursorEl) cursorEl.classList.remove('is-done');
-
-    var pending = targets.length;
-
-    function finishAll() {
-      later(function () {
-        if (activeRun !== runId) return;
-        if (cursorEl) cursorEl.classList.add('is-done');
-      }, 700);
-    }
-
-    later(function () {
-      if (activeRun !== runId) return;
-      targets.forEach(function (el) {
-        var text = el.getAttribute('data-type-text') || '';
-        typeOne(el, text, function () {
-          pending -= 1;
-          if (pending <= 0) finishAll();
-        }, activeRun);
+      afterEls.forEach(function (el) {
+        el.classList.add('is-hero-ready');
+        el.style.opacity = '';
+        el.style.transform = '';
       });
-    }, 420);
-  }
+    }
 
-  var io = new IntersectionObserver(
-    function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          runSequence();
-        } else {
-          runId += 1;
-          resetAll();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      showAll();
+      return null;
+    }
+
+    if (typeof gsap === 'undefined') {
+      showAll();
+      return null;
+    }
+
+    var tl = gsap.timeline({ defaults: { ease: ease } });
+
+    /* Elementos do hero (foto, grade, laterais, marquee) — juntos, só opacity
+       (evita quebrar translateX das rails / scale da foto no mobile) */
+    if (afterEls.length) {
+      afterEls.forEach(function (el) {
+        el.classList.add('is-hero-ready');
+      });
+      gsap.set(afterEls, { opacity: 0 });
+      tl.to(
+        afterEls,
+        {
+          opacity: 1,
+          duration: 0.9,
+          stagger: 0.04
+        },
+        delay
+      );
+    }
+
+    /* THIAGO em seguida (desktop e mobile) */
+    var textStart = delay + 0.5;
+
+    textEls.forEach(function (el) {
+      var targets = [el];
+
+      if (typeof SplitType !== 'undefined') {
+        var split = new SplitType(el, { types: 'chars', tagName: 'span' });
+        if (split.chars && split.chars.length) {
+          targets = split.chars;
         }
-      });
-    },
-    { threshold: 0.12, rootMargin: '0px 0px -4% 0px' }
-  );
+      }
 
-  io.observe(section);
+      gsap.set(targets, { yPercent: 110, scale: 1.05, force3D: true });
+      el.classList.add('is-hero-ready');
+
+      tl.to(
+        targets,
+        {
+          yPercent: 0,
+          scale: 1,
+          duration: duration,
+          stagger: stagger,
+          force3D: true
+        },
+        textStart
+      );
+    });
+
+    return tl;
+  }
+
+  window.animateHeroReveal = animateHeroReveal;
+
+  function bootHeroReveal() {
+    var home = document.querySelector('#home.hero--fold');
+    if (!home) return;
+
+    var live = home.querySelector('.hero-shatter-live') || home;
+
+    function run() {
+      animateHeroReveal({ root: live });
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(run).catch(run);
+    } else {
+      window.addEventListener('load', run);
+      run();
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootHeroReveal);
+  } else {
+    bootHeroReveal();
+  }
 })();
 
 (function () {
@@ -637,12 +646,7 @@
     applyRevealTo(subChars, subAmount);
 
     if (underline && historiaChars.length) {
-      var histOn = 0;
-      historiaChars.forEach(function (el) {
-        if (el.classList.contains('is-on')) histOn += 1;
-      });
-      var u = histOn / historiaChars.length;
-      underline.style.setProperty('--underline-opacity', String(u));
+      underline.style.setProperty('--underline-opacity', '0');
     }
 
     /* Mobile: botão no meio da animação do título */

@@ -317,28 +317,30 @@ body {
   isolation: isolate;
 }
 
-.hero-fold-name .hero-type {
+.hero-name-mask {
+  display: block;
+  overflow: hidden;
+  line-height: 0.82;
+}
+
+.hero-name-text {
+  display: block;
+  will-change: transform;
+}
+
+.hero-name-text .char {
   display: inline-block;
-  min-height: 0.82em;
+  will-change: transform;
 }
 
-.hero-type-cursor {
-  display: inline-block;
-  width: 0.06em;
-  height: 0.72em;
-  margin-left: 0.04em;
-  vertical-align: 0.05em;
-  background: currentColor;
-  opacity: 0;
-}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-name-text:not(.is-hero-ready) {
+    transform: translate3d(0, 110%, 0) scale(1.05);
+  }
 
-.hero-type-cursor.is-on {
-  opacity: 1;
-  animation: hero-cursor-blink 0.7s steps(1) infinite;
-}
-
-@keyframes hero-cursor-blink {
-  50% { opacity: 0; }
+  .hero-reveal-after:not(.is-hero-ready) {
+    opacity: 0;
+  }
 }
 
 /* Camada 1 — grade atrás do nome */
@@ -724,7 +726,7 @@ body {
 }
 
 #story .story-fold-underline {
-  opacity: var(--underline-opacity, 0);
+  display: none;
 }
 
 /* Base chapada sob a animação */
@@ -818,18 +820,10 @@ body {
   .story-fold-historia {
     position: relative;
     display: inline-block;
-    padding-bottom: 0.12em;
   }
 
   .story-fold-underline {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -0.02em;
-    width: 100%;
-    height: 0.28em;
-    color: #ffffff;
-    overflow: visible;
+    display: none;
   }
 
   .story-fold-sub {
@@ -862,8 +856,7 @@ body {
     min-width: 18rem;
     max-width: 24rem;
     margin-top: 0;
-    /* Compensa o sublinhado de HISTÓRIA. para alinhar à base das letras */
-    margin-bottom: 0.85rem;
+    margin-bottom: 0;
     padding: 0.75rem 0.75rem 0.75rem 1.75rem;
     border-radius: 999px;
     background: #ececec;
@@ -982,18 +975,10 @@ body {
   .story-fold-historia {
     position: relative;
     display: inline-block;
-    padding-bottom: 0.12em;
   }
 
   .story-fold-underline {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -0.02em;
-    width: 100%;
-    height: 0.28em;
-    color: #ffffff;
-    overflow: visible;
+    display: none;
   }
 
   .story-fold-sub {

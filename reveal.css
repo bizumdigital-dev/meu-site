@@ -43,12 +43,91 @@
   .case-section-divider.js-reveal.js-reveal-individual.is-revealed {
     transform: none;
   }
+
+  /* —— Títulos de seção: reveal com blur + stagger por palavra —— */
+  .reveal-title {
+    --reveal-title-y: 52px;
+    --reveal-title-blur: 8px;
+    --reveal-title-dur: 0.9s;
+    --reveal-title-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --reveal-title-delay: 0ms;
+    --reveal-title-stagger: 100ms;
+  }
+
+  .reveal-title.reveal-title--en {
+    --reveal-title-delay: 180ms;
+  }
+
+  .reveal-title .reveal-title-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-title-y), 0);
+    filter: blur(var(--reveal-title-blur));
+    transition:
+      opacity var(--reveal-title-dur) var(--reveal-title-ease),
+      transform var(--reveal-title-dur) var(--reveal-title-ease),
+      filter var(--reveal-title-dur) var(--reveal-title-ease);
+    transition-delay: 0ms;
+    will-change: opacity, transform, filter;
+  }
+
+  .reveal-title.is-visible .reveal-title-word {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+    transition-delay: calc(
+      var(--reveal-title-delay) + (var(--word-i, 0) * var(--reveal-title-stagger))
+    );
+  }
+
+  /* Bloco inteiro (ex.: título da story com typewriter interno) */
+  .reveal-title.reveal-title--block {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-title-y), 0);
+    filter: blur(var(--reveal-title-blur));
+    transition:
+      opacity var(--reveal-title-dur) var(--reveal-title-ease),
+      transform var(--reveal-title-dur) var(--reveal-title-ease),
+      filter var(--reveal-title-dur) var(--reveal-title-ease);
+    transition-delay: 0ms;
+    will-change: opacity, transform, filter;
+  }
+
+  .reveal-title.reveal-title--block.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+    transition-delay: var(--reveal-title-delay);
+  }
+
+  @media (max-width: 900px) {
+    .reveal-title {
+      --reveal-title-y: 36px;
+      --reveal-title-blur: 6px;
+      --reveal-title-dur: 0.85s;
+      --reveal-title-stagger: 90ms;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .js-reveal {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+
+  .reveal-title .reveal-title-word {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .reveal-title.reveal-title--block {
+    opacity: 1;
+    transform: none;
+    filter: none;
     transition: none;
   }
 }

@@ -28,13 +28,13 @@
             <div class="hero-blinds" aria-hidden="true"></div>
             <div class="hero-shatter-live">
       <!-- Laterais em altura total do hero (topo da página → base) -->
-      <div class="hero-side-rails" aria-hidden="true">
+      <div class="hero-side-rails hero-reveal-after" aria-hidden="true" data-hero-reveal-after>
         <span class="hero-side-rail hero-side-rail--left"></span>
         <span class="hero-side-rail hero-side-rail--right"></span>
       </div>
 
       <div class="hero-fold">
-        <div class="hero-fold-panel">
+        <div class="hero-fold-panel hero-reveal-after" data-hero-reveal-after>
           <svg class="hero-fold-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
             <!-- Horizontais (faixa da grade, mais perto do THIAGO) -->
             <line x1="48" y1="504" x2="952" y2="504" class="hero-fold-line" />
@@ -122,10 +122,12 @@
         </div>
 
         <h1 class="hero-fold-name" aria-label="Thiago">
-          <span class="hero-type hero-type--name" data-type-text="THIAGO"></span><span class="hero-type-cursor" aria-hidden="true"></span>
+          <span class="hero-name-mask">
+            <span class="hero-name-text" data-hero-reveal>THIAGO</span>
+          </span>
         </h1>
 
-        <div class="hero-fold-portrait" aria-hidden="true">
+        <div class="hero-fold-portrait hero-reveal-after" aria-hidden="true" data-hero-reveal-after>
           <img
             class="hero-fold-portrait-img"
             src="assets/foto-thiago.png"
@@ -138,7 +140,7 @@
       </div>
 
       <!-- Ticker mobile — colado na base da foto -->
-      <div class="hero-marquee" aria-label="Áreas e experiência">
+      <div class="hero-marquee hero-reveal-after" aria-label="Áreas e experiência" data-hero-reveal-after>
         <div class="hero-marquee-viewport">
           <div class="hero-marquee-track">
             <div class="hero-marquee-group">
@@ -178,7 +180,7 @@
     <section id="story" class="story-fold" aria-labelledby="story-heading">
       <div class="story-fold-glow" aria-hidden="true"></div>
       <div class="story-fold-inner">
-        <h2 id="story-heading" class="story-fold-title">
+        <h2 id="story-heading" class="story-fold-title reveal-title reveal-title--block">
           <span class="story-fold-title-base" aria-hidden="true">
             <span class="story-fold-line">TODA <span class="story-fold-accent">MARCA</span></span>
             <span class="story-fold-line">
@@ -190,18 +192,12 @@
             <span class="story-fold-line">TODA <span class="story-fold-accent">MARCA</span></span>
             <span class="story-fold-line">
               CONTA UMA
-              <span class="story-fold-historia">
-                HISTÓRIA.
-                <svg class="story-fold-underline" viewBox="0 0 280 18" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M4 6.5 C70 3.5, 140 3, 210 5.5 C230 6.2, 255 7.5, 276 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-                  <path d="M8 13 C75 10.5, 150 9.8, 220 12 C240 12.8, 258 13.5, 274 12.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </span>
+              <span class="story-fold-historia">HISTÓRIA.</span>
             </span>
           </span>
         </h2>
-        <p class="story-fold-sub">Every <strong>brand</strong> tells a story.</p>
-        <a class="story-fold-cta" href="#contact">
+        <p class="story-fold-sub reveal-title reveal-title--en reveal-title--block">Every <strong>brand</strong> tells a story.</p>
+        <a class="story-fold-cta" href="https://wa.me/5561999933552?text=Ol%C3%A1!%20Thiago.%20Vim%20pelo%20seu%20site%20e%20gostaria%20de%20um%20or%C3%A7amento." rel="noopener noreferrer" target="_blank">
           <span class="story-fold-cta-label">Solicite um orçamento</span>
           <span class="story-fold-cta-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -217,8 +213,8 @@
       <div class="works-inner">
         <header class="works-head">
           <div class="works-head-titles">
-            <h2 id="works-heading" class="works-title">Projetos</h2>
-            <p class="works-title-pt">Projects</p>
+            <h2 id="works-heading" class="works-title reveal-title">Projetos</h2>
+            <p class="works-title-pt reveal-title reveal-title--en">Projects</p>
           </div>
           <a href="works.html" class="works-see-all">Ver todos</a>
         </header>
@@ -273,8 +269,8 @@
     <section id="call-me" class="call-me" aria-labelledby="call-me-heading">
       <div class="call-me-inner">
         <header class="call-me-head">
-          <h2 id="call-me-heading" class="call-me-title">Me chame para...</h2>
-          <p class="call-me-title-en">Call me for...</p>
+          <h2 id="call-me-heading" class="call-me-title reveal-title">Me chame para...</h2>
+          <p class="call-me-title-en reveal-title reveal-title--en">Call me for...</p>
         </header>
 
         <div class="call-me-list">
@@ -364,8 +360,8 @@
       <div class="contact-inner">
         <div class="contact-col contact-col--bio">
           <header class="contact-head">
-            <h2 id="contact-heading" class="contact-title">Sobre mim</h2>
-            <p class="contact-title-pt">About me</p>
+            <h2 id="contact-heading" class="contact-title reveal-title">Sobre mim</h2>
+            <p class="contact-title-pt reveal-title reveal-title--en">About me</p>
           </header>
           <p class="contact-bio contact-bio--pt">
             Sou Thiago França, formado em Design em 2010 e especializado em Branding. Sempre estive em contato com a área de criação offline e digital, hoje meu foco está em projetos de UX e Branding.
@@ -402,7 +398,7 @@
                   </svg>
                 </span>
               </a>
-              <a class="contact-social" href="https://contate.me/ios/bizzucriativo" rel="noopener noreferrer" target="_blank">
+              <a class="contact-social" href="https://wa.me/5561999933552?text=Ol%C3%A1!%20Thiago.%20Vim%20pelo%20seu%20site%20e%20gostaria%20de%20um%20or%C3%A7amento." rel="noopener noreferrer" target="_blank">
                 <span class="contact-social-label">WhatsApp</span>
                 <span class="contact-social-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -417,6 +413,8 @@
       </div>
     </section>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
   <script src="reveal.js"></script>
   <script src="thiago-franca.js"></script>
 </body>

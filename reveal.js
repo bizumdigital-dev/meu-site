@@ -12,6 +12,7 @@
 
     if (id === 'works') {
       section.querySelectorAll('.works-head-titles > *').forEach(function (el) {
+        if (el.classList.contains('reveal-title')) return;
         list.push(el);
       });
       var seeAll = section.querySelector('.works-see-all');
@@ -24,8 +25,20 @@
       return list;
     }
 
+    if (id === 'call-me') {
+      /* Mesmo cascade dos textos de apoio de #contact (js-reveal + stagger) */
+      section.querySelectorAll('.call-me-item').forEach(function (el) {
+        list.push(el);
+      });
+      return list;
+    }
+
     if (id === 'contact') {
       section.querySelectorAll('.contact-col--bio > *').forEach(function (el) {
+        if (el.classList.contains('reveal-title') || el.querySelector('.reveal-title')) {
+          /* Cabeçalho de títulos: anima via .reveal-title; demais filhos do head ficam de fora do cascade */
+          if (el.classList.contains('contact-head')) return;
+        }
         list.push(el);
       });
       section.querySelectorAll('.contact-col--info > *').forEach(function (el) {
@@ -147,6 +160,7 @@
     /* Case studies — título/textos + cada imagem da galeria (como thumbs em Works) */
     if (section.classList.contains('case-reveal-section')) {
       section.querySelectorAll('.case-reveal-item').forEach(function (el) {
+        if (el.classList.contains('reveal-title')) return;
         if (el.classList.contains('agape-num-gallery')) {
           Array.prototype.forEach.call(el.children, function (child) {
             if (child.tagName === 'FIGURE') {
@@ -232,7 +246,7 @@
           });
         });
       },
-      { threshold: 0.08, rootMargin: '0px 0px -8% 0px' }
+      { threshold: 0.28, rootMargin: '0px 0px -24% 0px' }
     );
 
     var elementIo = new IntersectionObserver(
@@ -273,5 +287,89 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+})();
+
+/* Títulos de seção — utilitário reutilizável (.reveal-title → .is-visible) */
+(function () {
+  'use strict';
+
+  var WORD_STAGGER_MS = 100;
+  var EN_DELAY_MS = 180;
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function wrapWords(el) {
+    if (el.dataset.revealPrepared === '1') return;
+    if (el.classList.contains('reveal-title--block')) {
+      el.dataset.revealPrepared = '1';
+      return;
+    }
+
+    var text = el.textContent || '';
+    var parts = text.split(/(\s+)/);
+    var frag = document.createDocumentFragment();
+    var wordIndex = 0;
+
+    parts.forEach(function (part) {
+      if (!part.length) return;
+      if (/^\s+$/.test(part)) {
+        frag.appendChild(document.createTextNode(part));
+        return;
+      }
+      var span = document.createElement('span');
+      span.className = 'reveal-title-word';
+      span.style.setProperty('--word-i', String(wordIndex));
+      span.textContent = part;
+      frag.appendChild(span);
+      wordIndex += 1;
+    });
+
+    el.textContent = '';
+    el.appendChild(frag);
+    el.dataset.revealPrepared = '1';
+  }
+
+  function initRevealTitles() {
+    var titles = document.querySelectorAll('.reveal-title');
+    if (!titles.length) return;
+
+    titles.forEach(function (el) {
+      wrapWords(el);
+      if (el.classList.contains('reveal-title--en')) {
+        el.style.setProperty('--reveal-title-delay', EN_DELAY_MS + 'ms');
+      }
+      el.style.setProperty('--reveal-title-stagger', WORD_STAGGER_MS + 'ms');
+    });
+
+    if (prefersReducedMotion()) {
+      titles.forEach(function (el) {
+        el.classList.add('is-visible');
+      });
+      return;
+    }
+
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.3, rootMargin: '0px 0px -5% 0px' }
+    );
+
+    titles.forEach(function (el) {
+      io.observe(el);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRevealTitles);
+  } else {
+    initRevealTitles();
   }
 })();
