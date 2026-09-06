@@ -34,18 +34,11 @@
     }
 
     if (id === 'contact') {
-      section.querySelectorAll('.contact-col--bio > *').forEach(function (el) {
-        if (el.classList.contains('reveal-title') || el.querySelector('.reveal-title')) {
-          /* Cabeçalho de títulos: anima via .reveal-title; demais filhos do head ficam de fora do cascade */
-          if (el.classList.contains('contact-head')) return;
-        }
-        list.push(el);
-      });
-      section.querySelectorAll('.contact-col--info > *').forEach(function (el) {
-        list.push(el);
-      });
       var photo = section.querySelector('.contact-photo');
       if (photo) list.push(photo);
+      section.querySelectorAll('.contact-col--bio > *').forEach(function (el) {
+        list.push(el);
+      });
       return list;
     }
 
@@ -308,27 +301,43 @@
       return;
     }
 
-    var text = el.textContent || '';
-    var parts = text.split(/(\s+)/);
-    var frag = document.createDocumentFragment();
     var wordIndex = 0;
 
-    parts.forEach(function (part) {
-      if (!part.length) return;
-      if (/^\s+$/.test(part)) {
-        frag.appendChild(document.createTextNode(part));
+    function walk(node) {
+      if (!node) return;
+
+      if (node.nodeType === 3) {
+        var parts = (node.textContent || '').split(/(\s+)/);
+        var frag = document.createDocumentFragment();
+        var hasWord = false;
+
+        parts.forEach(function (part) {
+          if (!part.length) return;
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part));
+            return;
+          }
+          hasWord = true;
+          var span = document.createElement('span');
+          span.className = 'reveal-title-word';
+          span.style.setProperty('--word-i', String(wordIndex));
+          span.textContent = part;
+          frag.appendChild(span);
+          wordIndex += 1;
+        });
+
+        if (hasWord && node.parentNode) {
+          node.parentNode.replaceChild(frag, node);
+        }
         return;
       }
-      var span = document.createElement('span');
-      span.className = 'reveal-title-word';
-      span.style.setProperty('--word-i', String(wordIndex));
-      span.textContent = part;
-      frag.appendChild(span);
-      wordIndex += 1;
-    });
 
-    el.textContent = '';
-    el.appendChild(frag);
+      if (node.nodeType !== 1) return;
+      var children = Array.prototype.slice.call(node.childNodes);
+      children.forEach(walk);
+    }
+
+    walk(el);
     el.dataset.revealPrepared = '1';
   }
 

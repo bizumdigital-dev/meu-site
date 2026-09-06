@@ -704,6 +704,86 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
+/* Próximo projeto — entre a galeria e o CTA */
+.case-next {
+  padding: clamp(2.25rem, 6vw, 3.5rem) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.case-next-link {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  text-decoration: none;
+  color: inherit;
+  outline: none;
+  white-space: nowrap;
+}
+
+.case-next-label {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: clamp(0.7rem, 1.35vw, 0.85rem);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--title-pt);
+}
+
+.case-next-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: 100%;
+}
+
+.case-next-name {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: clamp(0.7rem, 1.35vw, 0.85rem);
+  line-height: 1.2;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.case-next-arrow {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: #ffffff;
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+
+.case-next-arrow svg {
+  display: block;
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+.case-next-link:hover .case-next-arrow,
+.case-next-link:focus-visible .case-next-arrow {
+  color: #ff2d8a;
+  transform: rotate(45deg);
+}
+
+.case-next-link:focus-visible {
+  outline: 2px solid #ff2d8a;
+  outline-offset: 6px;
+}
+
+@media (max-width: 640px) {
+  .case-next {
+    padding: 2.15rem 0 2.35rem;
+  }
+}
+
 /* CTA final */
 .agape-cta {
   padding: clamp(2.5rem, 7vw, 4rem) 0 clamp(3rem, 9vw, 5rem);
@@ -732,6 +812,19 @@
   text-transform: uppercase;
   color: var(--title-pt);
   margin: 0 0 clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.agape-cta-button {
+  width: auto;
+  min-width: min(100%, 18rem);
+  max-width: 22.5rem;
+}
+
+@media (max-width: 640px) {
+  .agape-cta-button {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 .agape-cta-links {
