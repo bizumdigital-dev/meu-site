@@ -131,12 +131,3 @@
     transition: none;
   }
 }
-
-/* Cards com hover em transform continuam funcionando após .is-revealed */
-.card.js-reveal.is-revealed:hover {
-  transform: translateY(-4px);
-}
-
-.bento-card.js-reveal.is-revealed:hover {
-  transform: translateY(-2px);
-}

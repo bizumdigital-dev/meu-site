@@ -543,3 +543,305 @@
     });
   });
 })();
+
+(function () {
+  'use strict';
+
+  var STORY_ROTATOR_WORDS = [
+    'UMA HISTÓRIA.',
+    'UM SONHO.',
+    'UM PROPÓSITO.',
+    'UMA JORNADA.',
+    'UMA ESSÊNCIA.',
+    'UMA EXPERIÊNCIA.',
+    'UMA CONQUISTA.',
+    'UMA IDENTIDADE.'
+  ];
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function splitCharsManual(el) {
+    var text = el.textContent || '';
+    el.textContent = '';
+    var chars = [];
+
+    Array.prototype.forEach.call(text, function (ch) {
+      var span = document.createElement('span');
+      span.className = 'char';
+      if (ch === ' ' || ch === '\u00A0') {
+        span.className += ' letter-split-space';
+        span.textContent = '\u00A0';
+      } else {
+        span.textContent = ch;
+      }
+      el.appendChild(span);
+      chars.push(span);
+    });
+
+    return chars;
+  }
+
+  function splitChars(el) {
+    return splitCharsManual(el);
+  }
+
+  function measureLongestWidth(el, words) {
+    var probe = el.cloneNode(false);
+    probe.style.cssText =
+      'position:absolute;left:-9999px;top:0;visibility:hidden;display:inline-block;white-space:nowrap;width:auto;min-width:0;';
+    (el.parentNode || document.body).appendChild(probe);
+    var max = 0;
+    words.forEach(function (word) {
+      probe.textContent = word;
+      max = Math.max(max, probe.offsetWidth);
+    });
+    probe.parentNode.removeChild(probe);
+    return Math.ceil(max);
+  }
+
+  function lockRotatorSize(el, words) {
+    var width = measureLongestWidth(el, words);
+    if (width > 0) {
+      el.style.minWidth = width + 'px';
+    }
+    el.style.minHeight = '1em';
+  }
+
+  function whenTitleRevealDone(el, callback) {
+    var title = el.closest('.reveal-title');
+
+    function finishWait() {
+      if (!title) {
+        callback();
+        return;
+      }
+
+      var words = title.querySelectorAll('.reveal-title-word');
+      var last = words.length ? words[words.length - 1] : null;
+      var styles = getComputedStyle(title);
+      var staggerMs = parseFloat(styles.getPropertyValue('--reveal-title-stagger')) || 100;
+      var delayMs = parseFloat(styles.getPropertyValue('--reveal-title-delay')) || 0;
+      var durMs = 900;
+      var lastIndex = words.length ? words.length - 1 : 0;
+
+      if (last) {
+        var rawIndex = last.style.getPropertyValue('--word-i');
+        if (!rawIndex) {
+          rawIndex = getComputedStyle(last).getPropertyValue('--word-i');
+        }
+        var parsedIndex = parseInt(rawIndex, 10);
+        if (!isNaN(parsedIndex)) lastIndex = parsedIndex;
+
+        var durStr = getComputedStyle(last).transitionDuration || '';
+        var durVal = parseFloat(durStr);
+        if (!isNaN(durVal) && durVal > 0) {
+          durMs = durStr.indexOf('ms') > -1 ? durVal : durVal * 1000;
+        }
+      }
+
+      window.setTimeout(callback, delayMs + lastIndex * staggerMs + durMs + 80);
+    }
+
+    if (!title || prefersReducedMotion()) {
+      callback();
+      return;
+    }
+
+    if (title.classList.contains('is-visible')) {
+      var revealed = title.querySelectorAll('.reveal-title-word');
+      var lastWord = revealed.length ? revealed[revealed.length - 1] : null;
+      if (lastWord && getComputedStyle(lastWord).opacity === '1') {
+        callback();
+        return;
+      }
+      finishWait();
+      return;
+    }
+
+    var mo = new MutationObserver(function () {
+      if (title.classList.contains('is-visible')) {
+        mo.disconnect();
+        finishWait();
+      }
+    });
+    mo.observe(title, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function initRotatingTextEffect(selector, wordsArray, intervalMs) {
+    if (!selector) return;
+
+    var words = (wordsArray && wordsArray.length ? wordsArray : STORY_ROTATOR_WORDS).slice();
+    var holdMs = intervalMs == null ? 2000 : intervalMs;
+    var nodes = document.querySelectorAll(selector);
+    if (!nodes.length) return;
+
+    if (prefersReducedMotion() || typeof gsap === 'undefined') {
+      return;
+    }
+
+    Array.prototype.forEach.call(nodes, function (el) {
+      if (el.dataset.rotatorReady === '1') return;
+      el.dataset.rotatorReady = '1';
+
+      var index = 0;
+      var currentChars = [];
+      var holdTimer = 0;
+      var swapTimer = 0;
+      var animTween = null;
+      var rotating = false;
+
+      function killHold() {
+        if (holdTimer) {
+          window.clearTimeout(holdTimer);
+          holdTimer = 0;
+        }
+      }
+
+      function killSwap() {
+        if (swapTimer) {
+          window.clearTimeout(swapTimer);
+          swapTimer = 0;
+        }
+      }
+
+      function setPhraseChars(text, visible) {
+        el.textContent = text;
+        currentChars = splitChars(el);
+        currentChars.forEach(function (char) {
+          var isSpace = char.classList.contains('letter-split-space');
+          gsap.set(char, {
+            opacity: visible ? 1 : 0,
+            x: 0,
+            y: visible ? 0 : 18,
+            rotation: visible || isSpace ? 0 : gsap.utils.random(-12, 12),
+            display: 'inline-block'
+          });
+        });
+        return currentChars;
+      }
+
+      function playChars(chars, vars, staggerEach) {
+        var tl = gsap.timeline();
+        chars.forEach(function (char, i) {
+          var isSpace = char.classList.contains('letter-split-space');
+          tl.to(
+            char,
+            {
+              opacity: vars.opacity,
+              y: vars.y,
+              rotation: isSpace ? 0 : vars.rotateTo == null ? gsap.utils.random(-12, 12) : vars.rotateTo,
+              duration: vars.duration,
+              ease: vars.ease,
+              force3D: true
+            },
+            i * staggerEach
+          );
+        });
+        return tl;
+      }
+
+      function scheduleNext() {
+        killHold();
+        if (document.hidden || rotating) return;
+        holdTimer = window.setTimeout(rotateToNext, holdMs);
+      }
+
+      function rotateToNext() {
+        if (document.hidden || rotating) return;
+        rotating = true;
+        var nextIndex = (index + 1) % words.length;
+
+        if (!currentChars.length) {
+          setPhraseChars(words[index], true);
+        }
+
+        if (animTween) animTween.kill();
+        killSwap();
+
+        var outTime = (0.45 + Math.max(0, currentChars.length - 1) * 0.022 + 0.05) * 1000;
+        var swapped = false;
+
+        function swapIn() {
+          if (swapped) return;
+          swapped = true;
+          index = nextIndex;
+          try {
+            setPhraseChars(words[index], false);
+            animTween = playChars(
+              currentChars,
+              { opacity: 1, y: 0, rotateTo: 0, duration: 0.7, ease: 'expo.out' },
+              0.03
+            );
+          } catch (err) {
+            el.textContent = words[index];
+          }
+          var inTime = (0.7 + Math.max(0, currentChars.length - 1) * 0.03 + 0.05) * 1000;
+          window.setTimeout(function () {
+            rotating = false;
+            animTween = null;
+            scheduleNext();
+          }, inTime);
+        }
+
+        swapTimer = window.setTimeout(swapIn, outTime);
+        try {
+          animTween = playChars(
+            currentChars,
+            { opacity: 0, y: -16, duration: 0.45, ease: 'power3.in' },
+            0.022
+          );
+        } catch (err) {
+          swapIn();
+        }
+      }
+
+      function onVisibility() {
+        if (document.hidden) {
+          killHold();
+          return;
+        }
+        if (!rotating) scheduleNext();
+      }
+
+      function startRotator() {
+        lockRotatorSize(el, words);
+        document.addEventListener('visibilitychange', onVisibility);
+        scheduleNext();
+      }
+
+      function prepare() {
+        lockRotatorSize(el, words);
+        whenTitleRevealDone(el, startRotator);
+      }
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(prepare).catch(prepare);
+      } else {
+        prepare();
+      }
+
+      window.addEventListener(
+        'resize',
+        function () {
+          lockRotatorSize(el, words);
+        },
+        { passive: true }
+      );
+    });
+  }
+
+  window.initRotatingTextEffect = initRotatingTextEffect;
+
+  function bootRotatingText() {
+    initRotatingTextEffect('.story-fold-historia', STORY_ROTATOR_WORDS, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootRotatingText);
+  } else {
+    bootRotatingText();
+  }
+})();
+

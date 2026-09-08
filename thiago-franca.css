@@ -121,8 +121,7 @@ body {
 }
 
 .site-nav a:focus-visible,
-.works-see-all:focus-visible,
-.hero-cta:focus-visible {
+.works-see-all:focus-visible {
   outline: 2px solid #ffb347;
   outline-offset: 3px;
 }
@@ -709,9 +708,19 @@ body {
   display: none;
 }
 
+.story-fold-historia .char {
+  display: inline-block;
+  color: inherit;
+  vertical-align: baseline;
+}
+
+.story-fold-line + .story-fold-line {
+  margin-top: 0.28em;
+}
+
 @media (min-width: 901px) {
   .story-fold {
-    --story-pink: #ff2d8a;
+    --story-pink: #E82F59;
     --story-pad-y: clamp(4.5rem, 8vw, 7rem);
     display: block;
     position: relative;
@@ -773,6 +782,10 @@ body {
     position: relative;
     display: inline-block;
     color: var(--story-pink);
+    white-space: nowrap;
+    text-align: left;
+    vertical-align: baseline;
+    overflow: visible;
   }
 
   .story-fold-underline {
@@ -868,7 +881,7 @@ body {
 
 @media (max-width: 900px) {
   .story-fold {
-    --story-pink: #ff2d8a;
+    --story-pink: #E82F59;
     --story-pad-x: 1.35rem;
     display: block;
     position: relative;
@@ -928,6 +941,10 @@ body {
     position: relative;
     display: inline-block;
     color: var(--story-pink);
+    white-space: nowrap;
+    text-align: left;
+    vertical-align: baseline;
+    overflow: visible;
   }
 
   .story-fold-underline {
@@ -1029,17 +1046,6 @@ body {
   margin-top: 0;
   padding-top: clamp(5.25rem, 14vw, 7.5rem);
   padding-bottom: clamp(3rem, 8vw, 5rem);
-}
-
-.works-lede {
-  font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: clamp(0.9rem, 1.85vw, 1.02rem);
-  line-height: 1.55;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.82);
-  max-width: 36rem;
-  margin: 0 0 clamp(1.75rem, 4vw, 2.75rem);
 }
 
 .works-inner {
@@ -1276,7 +1282,7 @@ body {
 
 @media (min-width: 901px) {
   .call-me {
-    --call-pink: #ff2d8a;
+    --call-pink: #E82F59;
     display: block;
     background: #000000;
     padding: clamp(4rem, 8vw, 6rem) clamp(1.25rem, 4vw, 3rem) clamp(3.5rem, 7vw, 5rem);
@@ -1410,7 +1416,7 @@ body {
 
 @media (max-width: 900px) {
   .call-me {
-    --call-pink: #ff2d8a;
+    --call-pink: #E82F59;
     display: block;
     background: #000000;
     padding: clamp(2.5rem, 8vw, 3.5rem) 1.35rem clamp(2.25rem, 7vw, 3rem);
@@ -1691,7 +1697,7 @@ body {
 
 .budget-cta:hover .budget-cta-icon,
 .budget-cta:focus-visible .budget-cta-icon {
-  background: #ff2d8a;
+  background: #E82F59;
 }
 
 .budget-cta:hover .budget-cta-icon svg,
@@ -1700,7 +1706,7 @@ body {
 }
 
 .budget-cta:focus-visible {
-  outline: 2px solid #ff2d8a;
+  outline: 2px solid #E82F59;
   outline-offset: 3px;
 }
 
@@ -1769,7 +1775,7 @@ body {
 }
 
 .site-footer-social:focus-visible {
-  outline: 2px solid #ff2d8a;
+  outline: 2px solid #E82F59;
   outline-offset: 3px;
 }
 
