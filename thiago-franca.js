@@ -18,212 +18,228 @@
 (function () {
   'use strict';
 
-  var hero = document.querySelector('#home.hero--fold');
-  var shatter = hero && hero.querySelector('.hero-shatter');
-  var pin = shatter && shatter.querySelector('.hero-shatter-pin');
-  var stage = shatter && shatter.querySelector('.hero-shatter-stage');
-  var live = shatter && shatter.querySelector('.hero-shatter-live');
-  var blinds = shatter && shatter.querySelector('.hero-blinds');
-  if (!hero || !shatter || !pin || !stage || !live || !blinds) return;
+  var MASK_MS = 1000;
+  var COPY_MS = 300;
+  var COPY_LEAD_MS = 200;
+  var EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
 
-  var STRIPS = 4;
-  var EXTRA_VH = 1.05;
-  /* Resto da página entra quando a animação chega a ~20% */
-  var REVEAL_AT = 0.2;
-  var desktopMq = window.matchMedia('(min-width: 901px)');
-  var stripEls = [];
-  var ticking = false;
-  var active = false;
-  var lastSnap = 0;
-  var fullRun = 0;
-  var stickyRun = 0;
+  var hero = document.querySelector('#home.hero--fold');
+  var story = document.querySelector('#story');
+  var overlay = document.getElementById('fold-wipe');
+  var inner = story && story.querySelector('.story-fold-inner');
+  if (!hero || !story || !overlay || !inner) return;
+
+  var home = document.getElementById('home');
+  var playing = false;
+  var entered = false;
+  var touchY = 0;
+  var finishTimer = 0;
+  var copyTimer = 0;
+  var placeholder = null;
+  var mobileMq = window.matchMedia('(max-width: 900px)');
 
   function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  function isDesktop() {
-    return desktopMq.matches;
+  function isMobileViewport() {
+    return mobileMq.matches;
   }
 
-  function clamp(n, a, b) {
-    return Math.min(b, Math.max(a, n));
+  function skipWipe() {
+    return prefersReducedMotion() || isMobileViewport();
   }
 
-  function easeInOut(t) {
-    return t * t * (3 - 2 * t);
+  function atHeroTop() {
+    return (window.scrollY || document.documentElement.scrollTop) <= 4;
   }
 
-  function clearShatter() {
-    shatter.style.height = '';
-    pin.style.height = '';
-    stage.style.height = '';
-    blinds.style.gap = '';
-    live.classList.remove('is-under');
-    blinds.classList.remove('is-active');
-    active = false;
-    stripEls.forEach(function (item) {
-      item.blind.style.transform = '';
+  function lockScroll() {
+    document.documentElement.classList.add('is-fold-wipe-lock');
+  }
+
+  function unlockScroll() {
+    document.documentElement.classList.remove('is-fold-wipe-lock');
+  }
+
+  function revealStoryCopy() {
+    story.querySelectorAll('.reveal-title').forEach(function (el) {
+      el.classList.add('is-visible');
     });
+    inner.classList.remove('is-wipe-enter');
+    inner.classList.add('is-wipe-in');
   }
 
-  function measureAndSize() {
-    if (!isDesktop() || prefersReducedMotion()) {
-      clearShatter();
-      return;
+  function restoreStory() {
+    if (placeholder && placeholder.parentNode) {
+      placeholder.parentNode.insertBefore(story, placeholder);
+      placeholder.parentNode.removeChild(placeholder);
     }
+    placeholder = null;
+    inner.classList.remove('is-wipe-enter', 'is-wipe-in');
+  }
 
-    var wasActive = active;
-    if (wasActive) {
-      live.classList.remove('is-under');
-      blinds.classList.remove('is-active');
-    }
+  function jumpToTarget(el) {
+    if (!el) return;
+    var html = document.documentElement;
+    var prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    var y = Math.round(el.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0));
+    html.scrollTop = y;
+    if (document.body) document.body.scrollTop = y;
+    window.scrollTo(0, y);
+    html.style.scrollBehavior = prev;
+  }
 
-    var liveH = Math.max(1, live.offsetHeight);
-    fullRun = Math.round(window.innerHeight * EXTRA_VH);
-    stickyRun = Math.round(fullRun * REVEAL_AT);
-    /* Sticky só até 20% da corrida → a 2ª dobra já aparece nesse ponto */
-    shatter.style.height = liveH + stickyRun + 'px';
-    pin.style.height = liveH + 'px';
-    stage.style.height = liveH + 'px';
+  function jumpToStory() {
+    jumpToTarget(placeholder || story);
+  }
 
-    stripEls.forEach(function (item, i) {
-      item.inner.style.height = liveH + 'px';
-      item.inner.style.top = -(i * (liveH / STRIPS)) + 'px';
+  function teardownOverlay() {
+    overlay.classList.remove('is-opening', 'is-active');
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.style.transition = 'none';
+    overlay.style.clipPath = '';
+    overlay.style.webkitClipPath = '';
+    window.setTimeout(function () {
+      overlay.style.transition = '';
+    }, 40);
+    hero.classList.remove('is-wipe-dim');
+  }
+
+  function finish() {
+    if (!playing) return;
+    playing = false;
+    entered = true;
+    window.clearTimeout(finishTimer);
+    window.clearTimeout(copyTimer);
+    unlockScroll();
+    jumpToStory();
+    restoreStory();
+    teardownOverlay();
+  }
+
+  function play() {
+    if (playing || skipWipe()) return;
+    if (!atHeroTop()) return;
+
+    playing = true;
+    entered = false;
+    lockScroll();
+    window.scrollTo(0, 0);
+
+    placeholder = document.createElement('div');
+    placeholder.setAttribute('aria-hidden', 'true');
+    placeholder.style.height = story.offsetHeight + 'px';
+    story.parentNode.insertBefore(placeholder, story);
+
+    inner.classList.remove('is-wipe-in');
+    inner.classList.add('is-wipe-enter');
+
+    overlay.appendChild(story);
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.style.transition = 'none';
+    overlay.style.clipPath = 'inset(100% 0 0 0)';
+    overlay.style.webkitClipPath = 'inset(100% 0 0 0)';
+    overlay.classList.add('is-active');
+    overlay.classList.remove('is-opening');
+
+    hero.classList.remove('is-wipe-dim');
+    void overlay.offsetWidth;
+
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        overlay.style.transition =
+          'clip-path ' + MASK_MS + 'ms ' + EASE + ', -webkit-clip-path ' + MASK_MS + 'ms ' + EASE;
+        overlay.classList.add('is-opening');
+        overlay.style.clipPath = 'inset(0% 0 0 0)';
+        overlay.style.webkitClipPath = 'inset(0% 0 0 0)';
+        hero.classList.add('is-wipe-dim');
+      });
     });
 
-    if (wasActive) {
-      live.classList.add('is-under');
-      blinds.classList.add('is-active');
-    }
+    copyTimer = window.setTimeout(revealStoryCopy, Math.max(0, MASK_MS - COPY_LEAD_MS));
+    finishTimer = window.setTimeout(finish, MASK_MS + 40);
   }
 
-  function buildStrips() {
-    blinds.innerHTML = '';
-    stripEls = [];
-
-    for (var i = 0; i < STRIPS; i += 1) {
-      var blind = document.createElement('div');
-      blind.className = 'hero-blind';
-      blind.style.setProperty('--blind-i', String(i));
-
-      var inner = document.createElement('div');
-      inner.className = 'hero-blind-inner';
-
-      blind.appendChild(inner);
-      blinds.appendChild(blind);
-      stripEls.push({ blind: blind, inner: inner, index: i });
-    }
+  function shouldCaptureDown() {
+    if (isMobileViewport() && !playing) return false;
+    if (playing) return true;
+    if (entered) return false;
+    if (skipWipe()) return false;
+    return atHeroTop();
   }
 
-  function snapshotToStrips() {
-    var liveH = Math.max(1, live.offsetHeight);
-    stripEls.forEach(function (item, i) {
-      while (item.inner.firstChild) item.inner.removeChild(item.inner.firstChild);
-      var clone = live.cloneNode(true);
-      clone.classList.remove('is-under');
-      item.inner.style.height = liveH + 'px';
-      item.inner.style.top = -(i * (liveH / STRIPS)) + 'px';
-      item.inner.appendChild(clone);
-    });
-    lastSnap = Date.now();
+  function onWheel(e) {
+    if (!shouldCaptureDown()) return;
+    if (e.deltaY <= 0) return;
+    e.preventDefault();
+    play();
   }
 
-  function setStripProgress(p) {
-    /* frestas verticais leves entre os blocos → preto do stage */
-    blinds.style.gap = (p * 10).toFixed(2) + 'px';
-
-    stripEls.forEach(function (item, i) {
-      var start = i * 0.08;
-      var local = clamp((p - start) / 0.7, 0, 1);
-      local = easeInOut(local);
-      var dir = i % 2 === 0 ? -1 : 1;
-      var x = dir * local * 110;
-      item.blind.style.transform = 'translate3d(' + x.toFixed(2) + '%,0,0)';
-    });
+  function onTouchStart(e) {
+    if (!e.touches || !e.touches.length) return;
+    touchY = e.touches[0].clientY;
   }
 
-  function progress() {
-    if (fullRun <= 1) return 0;
-    var scrolled = -shatter.getBoundingClientRect().top;
-
-    /* Durante o sticky: 0 → 20% da animação */
-    if (scrolled <= stickyRun) {
-      return clamp(scrolled / fullRun, 0, REVEAL_AT);
-    }
-
-    /* Depois: 2ª dobra já entra; completa os 80% restantes ao sair o hero */
-    var leave = clamp(
-      -pin.getBoundingClientRect().top / Math.max(pin.offsetHeight * 0.4, 1),
-      0,
-      1
-    );
-    return clamp(REVEAL_AT + leave * (1 - REVEAL_AT), 0, 1);
+  function onTouchMove(e) {
+    if (!shouldCaptureDown()) return;
+    if (!e.touches || !e.touches.length) return;
+    var dy = touchY - e.touches[0].clientY;
+    if (dy < 10) return;
+    e.preventDefault();
+    play();
   }
 
-  function update() {
-    ticking = false;
-    if (!isDesktop() || prefersReducedMotion()) {
-      clearShatter();
-      return;
-    }
-
-    var p = progress();
-
-    if (p > 0.012) {
-      if (!active) {
-        snapshotToStrips();
-        live.classList.add('is-under');
-        blinds.classList.add('is-active');
-        active = true;
-      }
-      setStripProgress(p);
-    } else if (active) {
-      setStripProgress(0);
-      live.classList.remove('is-under');
-      blinds.classList.remove('is-active');
-      active = false;
-    }
+  function onKeyDown(e) {
+    if (!shouldCaptureDown()) return;
+    var keys = ['ArrowDown', 'PageDown', ' ', 'Spacebar'];
+    if (keys.indexOf(e.key) === -1) return;
+    e.preventDefault();
+    play();
   }
 
   function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    window.requestAnimationFrame(update);
+    if (isMobileViewport() && !playing) return;
+    if (playing) {
+      if ((window.scrollY || document.documentElement.scrollTop) > 0) {
+        window.scrollTo(0, 0);
+      }
+      return;
+    }
+    var y = window.scrollY || document.documentElement.scrollTop;
+    if (y <= 4) {
+      entered = false;
+      return;
+    }
+    if (skipWipe()) return;
+    if (!entered && y > 4 && y < (home ? home.offsetHeight * 0.55 : 400)) {
+      window.scrollTo(0, 0);
+      play();
+    }
   }
 
-  buildStrips();
-  measureAndSize();
-  setStripProgress(0);
+  function onViewportChange() {
+    if (isMobileViewport() && playing) finish();
+  }
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function () {
-    measureAndSize();
-    if (isDesktop() && active) {
-      snapshotToStrips();
-      setStripProgress(progress());
-    }
+  overlay.addEventListener('transitionend', function (e) {
+    if (!playing) return;
+    if (e.target !== overlay) return;
+    if (e.propertyName && e.propertyName.indexOf('clip-path') === -1) return;
+    finish();
   });
 
-  function onBreakpointChange() {
-    measureAndSize();
-    update();
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  if (mobileMq.addEventListener) {
+    mobileMq.addEventListener('change', onViewportChange);
+  } else if (mobileMq.addListener) {
+    mobileMq.addListener(onViewportChange);
   }
-
-  if (desktopMq.addEventListener) {
-    desktopMq.addEventListener('change', onBreakpointChange);
-  } else if (desktopMq.addListener) {
-    desktopMq.addListener(onBreakpointChange);
-  }
-
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(function () {
-      measureAndSize();
-      update();
-    });
-  }
-
-  update();
 })();
 
 (function () {
