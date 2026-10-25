@@ -414,7 +414,7 @@
 
 /* CTA final */
 .agape-cta {
-  padding: clamp(2.5rem, 7vw, 4rem) 0 clamp(3rem, 9vw, 5rem);
+  padding: clamp(2.5rem, 7vw, 4rem) 0 var(--footer-gap);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 

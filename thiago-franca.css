@@ -11,6 +11,7 @@
   --nav-line-h: calc(0.7rem * 1.65);
   --header-h: calc(var(--nav-pad-y) * 2 + var(--nav-line-h));
   --section-gap: clamp(2rem, 4.5vw, 3rem);
+  --footer-gap: calc(clamp(3.25rem, 7vw, 5rem) * 4 / 3);
   --accent-hover-gradient: linear-gradient(
     155deg,
     #ffb347 0%,
@@ -30,6 +31,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--header-h);
 }
 
 @media (min-width: 901px) {
@@ -51,7 +53,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 60;
   padding: var(--nav-pad-y) 1.5rem;
   pointer-events: none;
 }
@@ -930,7 +932,7 @@ html.is-fold-wipe-lock body {
 .works.works--page {
   margin-top: 0;
   padding-top: clamp(5.25rem, 14vw, 7.5rem);
-  padding-bottom: clamp(3rem, 8vw, 5rem);
+  padding-bottom: var(--footer-gap);
 }
 
 .works-inner {
@@ -1435,6 +1437,8 @@ html.is-fold-wipe-lock body {
 .contact {
   background: var(--black);
   padding: var(--section-gap) clamp(1.25rem, 4vw, 3rem);
+  padding-bottom: var(--footer-gap);
+  scroll-margin-top: var(--header-h);
 }
 
 .contact-inner {
@@ -1598,6 +1602,10 @@ html.is-fold-wipe-lock body {
 .contact-col--bio .budget-cta {
   width: 100%;
   max-width: 22.5rem;
+}
+
+main > :last-child {
+  padding-bottom: var(--footer-gap);
 }
 
 .site-footer {

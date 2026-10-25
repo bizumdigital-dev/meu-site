@@ -32,6 +32,8 @@
   var home = document.getElementById('home');
   var playing = false;
   var entered = false;
+  var navLock = false;
+  var navLockTimer = 0;
   var touchY = 0;
   var finishTimer = 0;
   var copyTimer = 0;
@@ -105,6 +107,16 @@
       overlay.style.transition = '';
     }, 40);
     hero.classList.remove('is-wipe-dim');
+  }
+
+  function abortWipe() {
+    if (!playing) return;
+    playing = false;
+    window.clearTimeout(finishTimer);
+    window.clearTimeout(copyTimer);
+    unlockScroll();
+    restoreStory();
+    teardownOverlay();
   }
 
   function finish() {
@@ -200,6 +212,7 @@
   }
 
   function onScroll() {
+    if (navLock) return;
     if (isMobileViewport() && !playing) return;
     if (playing) {
       if ((window.scrollY || document.documentElement.scrollTop) > 0) {
@@ -239,6 +252,56 @@
     mobileMq.addEventListener('change', onViewportChange);
   } else if (mobileMq.addListener) {
     mobileMq.addListener(onViewportChange);
+  }
+
+  function allowNavPastHero() {
+    entered = true;
+    navLock = true;
+    window.clearTimeout(navLockTimer);
+    abortWipe();
+    navLockTimer = window.setTimeout(function () {
+      navLock = false;
+    }, 1400);
+  }
+
+  function jumpToContact() {
+    var target = document.getElementById('contact');
+    if (!target) return;
+    allowNavPastHero();
+    var html = document.documentElement;
+    var prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    var headerEl = document.querySelector('.site-header');
+    var headerH = headerEl ? headerEl.getBoundingClientRect().height : 0;
+    var y = Math.round(
+      target.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - headerH
+    );
+    if (y < 0) y = 0;
+    html.scrollTop = y;
+    if (document.body) document.body.scrollTop = y;
+    window.scrollTo(0, y);
+    html.style.scrollBehavior = prev;
+    if (history.replaceState) {
+      history.replaceState(null, '', '#contact');
+    } else {
+      location.hash = 'contact';
+    }
+  }
+
+  document.querySelectorAll('a[href="#contact"]').forEach(function (link) {
+    link.addEventListener(
+      'click',
+      function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        jumpToContact();
+      },
+      true
+    );
+  });
+
+  if (location.hash === '#contact') {
+    jumpToContact();
   }
 })();
 
